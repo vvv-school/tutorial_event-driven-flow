@@ -24,7 +24,7 @@ icubcontrib_set_default_prefix()
 # includes  @ ICUBCONTIRB_INSTALL_PREFIX/include/
 include_directories(${YARP_INCLUDE_DIRS} ${eventdriven_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.cpp ${CMAKE_SOURCE_DIR}/src/vOptFlow.h ${CMAKE_SOURCE_DIR}/src/vOptFlow.cpp)
+add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/vOptFlow.h ${CMAKE_SOURCE_DIR}/src/vOptFlow.cpp)
 
 # libraries @ ICUBCONTRIB_INSTALL_PREFIX/lib/libeventdriven.a
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} eventdriven)
