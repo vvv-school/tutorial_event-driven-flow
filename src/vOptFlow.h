@@ -25,7 +25,14 @@
 #include <yarp/math/SVD.h>
 #include <iCub/eventdriven/all.h>
 
-class vFlowManager : public yarp::os::BufferedPort<eventdriven::vBottle>
+using ev::event;
+using ev::vQueue;
+using ev::vBottle;
+using ev::AddressEvent;
+using ev::FlowEvent;
+using ev::getas;
+
+class vFlowManager : public yarp::os::BufferedPort<vBottle>
 {
 private:
 
@@ -36,13 +43,13 @@ private:
     bool strictness;        //! don't lose events!
 
     //ports
-    yarp::os::BufferedPort<eventdriven::vBottle> outPort;
+    yarp::os::BufferedPort<vBottle> outPort;
 
     //data structures
-    eventdriven::vSurface2 *surfaceOnL;
-    eventdriven::vSurface2 *surfaceOfL;
-    eventdriven::vSurface2 *surfaceOnR;
-    eventdriven::vSurface2 *surfaceOfR;
+    ev::vSurface2 *surfaceOnL;
+    ev::vSurface2 *surfaceOfL;
+    ev::vSurface2 *surfaceOnR;
+    ev::vSurface2 *surfaceOfR;
 
     yarp::sig::Matrix At;
     yarp::sig::Matrix AtA;
@@ -50,11 +57,11 @@ private:
     yarp::sig::Vector abc;
 
     //coputation functions
-    bool compute(eventdriven::vSurface2 *surf, double &vx, double &vy);
+    bool compute(ev::vSurface2 *surf, double &vx, double &vy);
     int computeGrads(yarp::sig::Matrix &A, yarp::sig::Vector &Y,
                       double cx, double cy, double cz,
                       double &dtdy, double &dtdx);
-    int computeGrads(const eventdriven::vQueue &subsurf, eventdriven::AddressEvent &cen,
+    int computeGrads(const vQueue &subsurf, event<AddressEvent> cen,
                       double &dtdy, double &dtdx);
 
 public:
@@ -64,7 +71,7 @@ public:
     bool    open(std::string moduleName, bool strictness = false);
     void    close();
     void    interrupt();
-    void    onRead(eventdriven::vBottle &inBottle);
+    void    onRead(vBottle &inBottle);
 
 };
 

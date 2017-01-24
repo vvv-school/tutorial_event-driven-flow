@@ -27,6 +27,10 @@ int main(int argc, char * argv[])
 {
     /* initialize yarp network */
     yarp::os::Network yarp;
+    if(!yarp.checkNetwork()) {
+        std::cout << "Could not find yarp" << std::endl;
+        return -1;
+    }
 
     /* prepare and configure the resource finder */
     yarp::os::ResourceFinder rf;
@@ -43,25 +47,25 @@ int main(int argc, char * argv[])
 //vFlowManager
 /******************************************************************************/
 
-void vFlowManager::onRead(eventdriven::vBottle &inBottle)
+void vFlowManager::onRead(vBottle &inBottle)
 {
 
     /*prepare output vBottle with AEs extended with optical flow events*/
-    eventdriven::vBottle &outBottle = outPort.prepare();
+    vBottle &outBottle = outPort.prepare();
     outBottle.clear();
     yarp::os::Stamp st;
     this->getEnvelope(st); outPort.setEnvelope(st);
 
     /*get the event queue in the vBottle bot*/
-    eventdriven::vQueue q = inBottle.get<eventdriven::AddressEvent>();
+    vQueue q = inBottle.get<AddressEvent>();
 
-    for(eventdriven::vQueue::iterator qi = q.begin(); qi != q.end(); qi++)
+    for(vQueue::iterator qi = q.begin(); qi != q.end(); qi++)
     {
-        eventdriven::AddressEvent *aep = (*qi)->getAs<eventdriven::AddressEvent>();
+        event<AddressEvent> aep = getas<AddressEvent>(*qi);
         if(!aep) continue;
 
         //add the event to the appropriate surface
-        eventdriven::vSurface2 * cSurf;
+        ev::vSurface2 * cSurf;
         if(aep->getChannel()) {
             if(aep->getPolarity())
                 cSurf = surfaceOfR;
@@ -75,16 +79,16 @@ void vFlowManager::onRead(eventdriven::vBottle &inBottle)
         }
 
         //compute the flow
-        cSurf->addEvent(*aep);
+        cSurf->addEvent(aep);
         double vx, vy;
         if(compute(cSurf, vx, vy)) {
             //successfully computed a flow event
-            eventdriven::FlowEvent vf(*aep);
-            vf.setVx(vx);
-            vf.setVy(vy);
+            event<FlowEvent> vf = event<FlowEvent>(new FlowEvent(*(aep.get())));
+            vf->setVx(vx);
+            vf->setVy(vy);
             outBottle.addEvent(vf);
         } else {
-            outBottle.addEvent(*aep);
+            outBottle.addEvent(aep);
         }
 
     }
@@ -112,10 +116,10 @@ vFlowManager::vFlowManager(int height, int width, int filterSize,
 
 
     //create our surface in synchronous mode
-    surfaceOnL = new eventdriven::temporalSurface(width, height);
-    surfaceOfL = new eventdriven::temporalSurface(width, height);
-    surfaceOnR = new eventdriven::temporalSurface(width, height);
-    surfaceOfR = new eventdriven::temporalSurface(width, height);
+    surfaceOnL = new ev::temporalSurface(width, height);
+    surfaceOfL = new ev::temporalSurface(width, height);
+    surfaceOnR = new ev::temporalSurface(width, height);
+    surfaceOfR = new ev::temporalSurface(width, height);
 }
 
 bool vFlowManager::open(std::string moduleName, bool strictness)
@@ -129,7 +133,7 @@ bool vFlowManager::open(std::string moduleName, bool strictness)
 
     //open the input port
     this->useCallback(); //we need callback to use the onRead() function
-    if(!yarp::os::BufferedPort<eventdriven::vBottle>::open("/" + moduleName + "/vBottle:i"))
+    if(!yarp::os::BufferedPort<vBottle>::open("/" + moduleName + "/vBottle:i"))
         return false;
 
     //open the output port
@@ -143,7 +147,7 @@ void vFlowManager::close()
 {
     /*close ports*/
     outPort.close();
-    yarp::os::BufferedPort<eventdriven::vBottle>::close();
+    yarp::os::BufferedPort<vBottle>::close();
 
     delete surfaceOnL;
     delete surfaceOfL;
@@ -155,26 +159,25 @@ void vFlowManager::close()
 void vFlowManager::interrupt()
 {
     outPort.interrupt();
-    yarp::os::BufferedPort<eventdriven::vBottle>::interrupt();
+    yarp::os::BufferedPort<vBottle>::interrupt();
 }
 
-bool vFlowManager::compute(eventdriven::vSurface2 *surf, double &vx, double &vy)
+bool vFlowManager::compute(ev::vSurface2 *surf, double &vx, double &vy)
 {
 
     //get the most recent event
-    eventdriven::AddressEvent * vr =
-            surf->getMostRecent()->getAs<eventdriven::AddressEvent>();
+    event<AddressEvent> vr = getas<AddressEvent>(surf->getMostRecent());
 
     //find the side of this event that has the collection of temporally nearby
     //events. Heuristically more likely to be the correct plane.
-    double bestscore = eventdriven::vtsHelper::maxStamp()+1;
+    double bestscore = ev::vtsHelper::maxStamp()+1;
     int besti = 0, bestj = 0;
 
     for(int i = vr->getX()-fRad; i <= vr->getX()+fRad; i+=fRad) {
         for(int j = vr->getY()-fRad; j <= vr->getY()+fRad; j+=fRad) {
             //get the surface around the recent event
             double sobeltsdiff = 0;
-            const eventdriven::vQueue &subsurf = surf->getSurf(i, j, fRad);
+            const vQueue &subsurf = surf->getSurf(i, j, fRad);
             if(subsurf.size() < planeSize) continue;
 
             for(unsigned int k = 0; k < subsurf.size(); k++) {
@@ -182,7 +185,7 @@ bool vFlowManager::compute(eventdriven::vSurface2 *surf, double &vx, double &vy)
                 if(subsurf[k]->getStamp() > vr->getStamp()) {
                     //subsurf[k]->setStamp(subsurf[k]->getStamp() -
                     //                     eventdriven::vtsHelper::maxStamp());
-                    sobeltsdiff += eventdriven::vtsHelper::maxStamp();
+                    sobeltsdiff += ev::vtsHelper::maxStamp();
                 }
             }
             sobeltsdiff /= subsurf.size();
@@ -193,39 +196,39 @@ bool vFlowManager::compute(eventdriven::vSurface2 *surf, double &vx, double &vy)
         }
     }
     //return if we don't find a good candidate plane
-    if(bestscore > eventdriven::vtsHelper::maxStamp()) return false;
+    if(bestscore > ev::vtsHelper::maxStamp()) return false;
 
     //get the events
-    const eventdriven::vQueue &subsurf = surf->getSurf(besti, bestj, fRad);
+    const vQueue &subsurf = surf->getSurf(besti, bestj, fRad);
 
     //and compute the gradients of the plane
-    if(computeGrads(subsurf, *vr, vy, vx) < minEvtsOnPlane)
+    if(computeGrads(subsurf, vr, vy, vx) < minEvtsOnPlane)
         return false;
 
     return true;
 }
 
-int vFlowManager::computeGrads(const eventdriven::vQueue &subsurf,
-                                     eventdriven::AddressEvent &cen,
+int vFlowManager::computeGrads(const vQueue &subsurf,
+                                     ev::event<ev::AddressEvent> cen,
                                      double &dtdy, double &dtdx)
 {
 
     yarp::sig::Matrix A(subsurf.size(), 3);
     yarp::sig::Vector Y(subsurf.size());
     for(unsigned int vi = 0; vi < subsurf.size(); vi++) {
-        eventdriven::AddressEvent *v = subsurf[vi]->getAs<eventdriven::AddressEvent>();
+        event<AddressEvent> v = getas<AddressEvent>(subsurf[vi]);
         A(vi, 0) = v->getX();
         A(vi, 1) = v->getY();
         A(vi, 2) = 1;
-        if(v->getStamp() > cen.getStamp()) {
-            Y(vi) = (v->getStamp() - eventdriven::vtsHelper::maxStamp()) * eventdriven::vtsHelper::tstosecs();
+        if(v->getStamp() > cen->getStamp()) {
+            Y(vi) = (v->getStamp() - ev::vtsHelper::maxStamp()) * ev::vtsHelper::tstosecs();
         } else {
-            Y(vi) = v->getStamp() * eventdriven::vtsHelper::tstosecs();
+            Y(vi) = v->getStamp() * ev::vtsHelper::tstosecs();
         }
     }
 
-    return computeGrads(A, Y, cen.getX(), cen.getY(), cen.getStamp() *
-                        eventdriven::vtsHelper::tstosecs(), dtdy, dtdx);
+    return computeGrads(A, Y, cen->getX(), cen->getY(), cen->getStamp() *
+                        ev::vtsHelper::tstosecs(), dtdy, dtdx);
 }
 
 int vFlowManager::computeGrads(yarp::sig::Matrix &A, yarp::sig::Vector &Y,
@@ -295,8 +298,8 @@ bool vFlowModule::configure(yarp::os::ResourceFinder &rf)
             rf.check("strict", yarp::os::Value(true)).asBool();
 
     /* set parameters */
-    int height = rf.check("height", yarp::os::Value(128)).asInt();
-    int width = rf.check("width", yarp::os::Value(128)).asInt();
+    int height = rf.check("height", yarp::os::Value(240)).asInt();
+    int width = rf.check("width", yarp::os::Value(304)).asInt();
     int sobelSize = rf.check("filterSize", yarp::os::Value(3)).asInt();
     int minEvtsOnPlane = rf.check("minEvtsThresh", yarp::os::Value(5)).asInt();
 
