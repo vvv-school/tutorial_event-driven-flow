@@ -41,7 +41,7 @@ Some other useful (but not covered today) modules are:
 ### Events in event-driven libraries:
 Different types of events can be defined, inheriting from the basic type **vEvent** that holds the _timestamp_ of the event.
 
-![IMAGE OF INHERITANCE](./misc/vEventInheritance.png)
+![IMAGE OF INHERITANCE](./misc/vEventInherit.png)
 
 ```javascript
 EXAMPLE OF VEVENT - snapshot of code - store time
@@ -161,8 +161,19 @@ int dt = currenttimestamp - previoustimestamp;
 
 Unlike standard cameras, there is no "images" or "frames" when using events so we need to create an image frame from recent events that have occurred if we want to visualise the output on a synchronous display. This means that we are going to grab all of the events within a given time window (e.g. 30ms) and create a frame.
 
+The `vFramer` can have different display options.
 
+##### AE
 
+![ae](./misc/ae.png)
+
+##### ISO
+
+![iso](./misc/iso.png)
+
+##### FLOW
+
+![flow](./misc/flow.png)
 
 
 
