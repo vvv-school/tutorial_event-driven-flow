@@ -27,6 +27,8 @@ include_directories(${YARP_INCLUDE_DIRS} ${eventdriven_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/vOptFlow.h ${CMAKE_SOURCE_DIR}/src/vOptFlow.cpp)
 
+
+
 # libraries @ ICUBCONTRIB_INSTALL_PREFIX/lib/libeventdriven.a
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} eventdriven)
 
@@ -34,3 +36,5 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 icubcontrib_add_uninstall_target()
 
+file(GLOB scripts ${CMAKE_SOURCE_DIR}/app/scripts/*.xml)
+yarp_install(FILES ${scripts} DESTINATION ${ICUBCONTRIB_APPLICATIONS_INSTALL_DIR})
