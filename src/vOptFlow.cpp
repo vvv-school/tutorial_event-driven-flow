@@ -133,11 +133,11 @@ bool vFlowManager::open(std::string moduleName, bool strictness)
 
     //open the input port
     this->useCallback(); //we need callback to use the onRead() function
-    if(!yarp::os::BufferedPort<vBottle>::open("/" + moduleName + "/vBottle:i"))
+    if(!yarp::os::BufferedPort<vBottle>::open(moduleName + "/vBottle:i"))
         return false;
 
     //open the output port
-    if(!outPort.open("/" + moduleName + "/vBottle:o"))
+    if(!outPort.open(moduleName + "/vBottle:o"))
         return false;
 
     return true;
