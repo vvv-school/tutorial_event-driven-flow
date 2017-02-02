@@ -1,7 +1,7 @@
 <application>
 <name> event-optical-flow </name>
 
-<dependencies>	
+<dependencies>
 </dependencies>
 
 <!--
@@ -24,7 +24,7 @@
 
 <module>
     <name>tutorial_event-driven-flow</name>
-    <parameters>--name /vOptFlow --strict --filterSize 3 --minEvtsThresh 3 </parameters>
+    <parameters>--name /vOptFlow --strict --filterSize 3 --minEvtsThresh 6 </parameters>
     <node>localhost</node>
 </module>
 

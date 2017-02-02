@@ -6,7 +6,7 @@
         <author email="arren.glover@iit.it">Arren Glover</author>
     </authors>
 
-   
+
 <module>
     <name>vFramer</name>
     <parameters>--name vFramerSensor --frameRate 60 --displays "(1 evtSens (AE ISO))" --height 240 --width 304</parameters>
@@ -21,7 +21,7 @@
 
 <module>
     <name>tutorial_event-driven-flow</name>
-    <parameters> --name /vOptFlow --strict --filterSize 3 --minEvtsThresh 3 </parameters>
+    <parameters> --name /vOptFlow --strict --filterSize 3 --minEvtsThresh 6 </parameters>
     <node>localhost</node>
 </module>
 

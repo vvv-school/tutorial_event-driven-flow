@@ -70,7 +70,7 @@ public:
         playercontroller.write(cmd, reply);
         RTF_ASSERT_ERROR_IF(reply.get(0).asString() == "ok", "Did not successfully play the dataset");
 
-        yarp::os::Time::delay(10);
+        yarp::os::Time::delay(15);
 
         cmd.clear();
         cmd.addString("stop");
