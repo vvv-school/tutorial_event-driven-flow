@@ -1,11 +1,9 @@
 # Tutorial on Handling Event Driven Data Stream -- Optical Flow
-This tutorial introduces the basic components for handling event-driven data stream. We will use an example application, the **event-driven optical flow**, to learn the dedicated data structures and functions in the event-driven library and the basic components required to create an event-driven module.
+This tutorial introduces additional functionalities of the event-driven library. We will use an example application, the **event-driven optical flow**.
 
 # Requirements:
-Your current setup comprises YARP, iCub (some of the event-driven modules require iCub) and iCubContrib (for easy install of the executables). In addition you need the **robotology-playground/event-driven**(https://github.com/robotology-playground/event-driven.git) library.
+By now you should know the basics of event-driven library (from [tutorial_event-driven-handling]() )
 
-### Note: 
-The event-driven code is already installed in your virtual machine (alternatively, you should have followed the installing instructions in the vvv [wiki](https://github.com/vvv-school/vvv-school.github.io/blob/master/instructions/how-to-prepare-your-system.md#install-event-driven)), however, as there have been few updates, you need to `git pull`. 
 
 # The event-driven library
 
