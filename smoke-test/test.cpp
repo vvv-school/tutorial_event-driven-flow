@@ -5,8 +5,10 @@
 */
 #include <string>
 
-#include <rtf/yarp/YarpTestCase.h>
+#include <yarp/rtf/TestCase.h>
 #include <rtf/dll/Plugin.h>
+#include <rtf/TestAssert.h>
+
 
 #include <yarp/os/all.h>
 #include <iCub/eventdriven/all.h>
@@ -15,7 +17,7 @@ using namespace std;
 using namespace RTF;
 
 /**********************************************************************/
-class TestAssignmentEventOpticalFlow : public YarpTestCase
+class TestAssignmentEventOpticalFlow : public yarp::rtf::TestCase
 {
 
 private:
@@ -26,7 +28,7 @@ private:
 public:
     /******************************************************************/
     TestAssignmentEventOpticalFlow() :
-        YarpTestCase("TestAssignmentEventOpticalFlow")
+        yarp::rtf::TestCase("TestAssignmentEventOpticalFlow")
     {
     }
 
