@@ -16,7 +16,7 @@
 
 #include "vOptFlow.h"
 
-using yarp::math::operator *;
+//using yarp::math::operator *;
 using yarp::math::outerProduct;
 
 /******************************************************************************/
@@ -61,18 +61,18 @@ void vFlowManager::onRead(vBottle &inBottle)
 
     for(vQueue::iterator qi = q.begin(); qi != q.end(); qi++)
     {
-        event<AddressEvent> aep = getas<AddressEvent>(*qi);
+        event<AddressEvent> aep = is_event<AddressEvent>(*qi);
         if(!aep) continue;
 
         //add the event to the appropriate surface
         ev::vSurface2 * cSurf;
         if(aep->getChannel()) {
-            if(aep->getPolarity())
+            if(aep->polarity)
                 cSurf = surfaceOfR;
             else
                 cSurf = surfaceOnR;
         } else {
-            if(aep->getPolarity())
+            if(aep->polarity)
                 cSurf = surfaceOfL;
             else
                 cSurf = surfaceOnL;
@@ -84,8 +84,8 @@ void vFlowManager::onRead(vBottle &inBottle)
         if(compute(cSurf, vx, vy)) {
             //successfully computed a flow event
             event<FlowEvent> vf = event<FlowEvent>(new FlowEvent(*(aep.get())));
-            vf->setVx(vx);
-            vf->setVy(vy);
+            vf->vx = vx;
+            vf->vy = vy;
             outBottle.addEvent(vf);
         } else {
             outBottle.addEvent(aep);
@@ -166,23 +166,23 @@ bool vFlowManager::compute(ev::vSurface2 *surf, double &vx, double &vy)
 {
 
     //get the most recent event
-    event<AddressEvent> vr = getas<AddressEvent>(surf->getMostRecent());
+    event<AddressEvent> vr = as_event<AddressEvent>(surf->getMostRecent());
 
     //find the side of this event that has the collection of temporally nearby
     //events. Heuristically more likely to be the correct plane.
     double bestscore = ev::vtsHelper::maxStamp()+1;
     int besti = 0, bestj = 0;
 
-    for(int i = vr->getX()-fRad; i <= vr->getX()+fRad; i+=fRad) {
-        for(int j = vr->getY()-fRad; j <= vr->getY()+fRad; j+=fRad) {
+    for(int i = vr->x-fRad; i <= vr->x+fRad; i+=fRad) {
+        for(int j = vr->y-fRad; j <= vr->y+fRad; j+=fRad) {
             //get the surface around the recent event
             double sobeltsdiff = 0;
             const vQueue &subsurf = surf->getSurf(i, j, fRad);
             if(subsurf.size() < planeSize) continue;
 
             for(unsigned int k = 0; k < subsurf.size(); k++) {
-                sobeltsdiff += vr->getStamp() - subsurf[k]->getStamp();
-                if(subsurf[k]->getStamp() > vr->getStamp()) {
+                sobeltsdiff += vr->stamp - subsurf[k]->stamp;
+                if(subsurf[k]->stamp > vr->stamp) {
                     //subsurf[k]->setStamp(subsurf[k]->getStamp() -
                     //                     eventdriven::vtsHelper::maxStamp());
                     sobeltsdiff += ev::vtsHelper::maxStamp();
@@ -216,18 +216,18 @@ int vFlowManager::computeGrads(const vQueue &subsurf,
     yarp::sig::Matrix A(subsurf.size(), 3);
     yarp::sig::Vector Y(subsurf.size());
     for(unsigned int vi = 0; vi < subsurf.size(); vi++) {
-        event<AddressEvent> v = getas<AddressEvent>(subsurf[vi]);
-        A(vi, 0) = v->getX();
-        A(vi, 1) = v->getY();
+        event<AddressEvent> v = as_event<AddressEvent>(subsurf[vi]);
+        A(vi, 0) = v->x;
+        A(vi, 1) = v->y;
         A(vi, 2) = 1;
-        if(v->getStamp() > cen->getStamp()) {
-            Y(vi) = (v->getStamp() - ev::vtsHelper::maxStamp()) * ev::vtsHelper::tstosecs();
+        if(v->stamp > cen->stamp) {
+            Y(vi) = (v->stamp - ev::vtsHelper::max_stamp) * ev::vtsHelper::tstosecs();
         } else {
-            Y(vi) = v->getStamp() * ev::vtsHelper::tstosecs();
+            Y(vi) = v->stamp * ev::vtsHelper::tstosecs();
         }
     }
 
-    return computeGrads(A, Y, cen->getX(), cen->getY(), cen->getStamp() *
+    return computeGrads(A, Y, cen->x, cen->y, cen->stamp *
                         ev::vtsHelper::tstosecs(), dtdy, dtdx);
 }
 

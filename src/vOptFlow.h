@@ -25,12 +25,7 @@
 #include <yarp/math/SVD.h>
 #include <iCub/eventdriven/all.h>
 
-using ev::event;
-using ev::vQueue;
-using ev::vBottle;
-using ev::AddressEvent;
-using ev::FlowEvent;
-using ev::getas;
+using namespace ev;
 
 class vFlowManager : public yarp::os::BufferedPort<vBottle>
 {
